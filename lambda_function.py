@@ -8,7 +8,6 @@ import boto3
 
 sns = boto3.client('sns')
 
-charge_type = "card"
 
 with open("creds.json", encoding='utf-8') as f:
     credentials = json.load(f)
@@ -142,7 +141,7 @@ def process_transactions(charge_type, response, deposit_date):
     deposit_exists = check_aplos(batch_details)
     if not deposit_exists:
         add_deposit_aplos(api_base_url, api_id, api_access_token, batch_details)
-    print(batch_details)
+
 
 
 def lambda_handler(event, context):
