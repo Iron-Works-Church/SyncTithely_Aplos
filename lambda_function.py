@@ -46,6 +46,7 @@ def find_batch_details(response, deposit_date, charge_type):
     batch_details["details"] = {}
     batch_details["name"] = "Tithely Deposit for " + charge_type + " " + convert_timestamp(deposit_date)
     batch_details["date"] = convert_timestamp(deposit_date)
+    #pprint.pprint(response)
     for i in response["data"]:
         if i["deposit_date"] == deposit_date:
             charge_id = i["charge_id"]
@@ -56,15 +57,16 @@ def find_batch_details(response, deposit_date, charge_type):
                 fund = i["giving_type"]
                 if fund not in batch_details["details"]:
                     batch_details["details"][fund] = {"id": 62, "amount": "0", "fees": "0"}
-                batch_details["details"][fund]["amount"] = int(batch_details["details"][fund]["amount"]) + int(i["amount"])
-                batch_details["details"][fund]["fees"] = int(batch_details["details"][fund]["fees"]) + int(i["fees"])
+                if i["charge_status"] == "charged":
+                    batch_details["details"][fund]["amount"] = int(batch_details["details"][fund]["amount"]) + int(i["amount"])
+                    batch_details["details"][fund]["fees"] = int(batch_details["details"][fund]["fees"]) + int(i["fees"])
     return(batch_details)
 
 def convert_cents_dollars_find_total(batch_details):
     batch_details["total"] = 0
     for i, v in batch_details["details"].items():
-       v["amount"] = v["amount"] / 100
-       v["fees"] = v["fees"] / 100
+       v["amount"] = int(v["amount"]) / 100
+       v["fees"] = int(v["fees"]) / 100
        batch_details["total"] = v["amount"] + batch_details["total"] + v["fees"]
        batch_details["total"] = round(batch_details["total"], 2)
     return(batch_details)
@@ -80,6 +82,7 @@ def process_transactions(charge_type, response, deposit_date):
     batch_details = match_funds(api_base_url, api_id, api_access_token, batch_details)
     batch_details = convert_cents_dollars_find_total(batch_details)
     deposit_exists = check_aplos(batch_details)
+    #pprint.pprint(batch_details)
     if not deposit_exists:
         add_deposit_aplos(api_base_url, api_id, api_access_token, batch_details, church_name)
         create_cp_xfer_expense(api_base_url, api_id, api_access_token, batch_details, church_name)
@@ -108,3 +111,4 @@ def lambda_handler(event, context):
     }
 
 
+lambda_handler("event", "context")
